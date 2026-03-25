@@ -1,0 +1,128 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Gestion des Produits - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0">
+                <i class="bi bi-box-seam"></i> Gestion des Produits
+            </h1>
+            <small class="text-muted">{{ products|length }} produit(s)</small>
+        </div>
+        <a href="{{ path('admin_product_new') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Ajouter un produit
+        </a>
+    </div>
+
+    {% if products is empty %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle"></i>
+            <strong>Aucun produit trouvé.</strong> Commencez par <a href="{{ path('admin_product_new') }}">créer un produit</a>.
+        </div>
+    {% else %}
+        <div class="row">
+            {% for product in products %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0 transition-hover">
+                        <div class="position-relative overflow-hidden" style="height: 200px;">
+                            {% if product.image %}
+                                {% set imageSrc = product.image starts with 'http' ? product.image : asset(product.image) %}
+                                <img src="{{ imageSrc }}" alt="{{ product.name }}" class="card-img-top" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center h-100">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                            <div class="position-absolute top-0 end-0 m-2">
+                                {% if product.stock > 10 %}
+                                    <span class="badge bg-success">En stock ({{ product.stock }})</span>
+                                {% elseif product.stock > 0 %}
+                                    <span class="badge bg-warning text-dark">Stock faible ({{ product.stock }})</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Rupture</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                            {% if product.category %}
+                                <p class="card-text text-muted small">
+                                    <i class="bi bi-tag"></i> {{ product.category }}
+                                </p>
+                            {% endif %}
+                            <p class="card-text text-truncate" style="max-height: 60px;">
+                                <small class="text-muted">{{ product.description|slice(0, 80) }}{% if product.description|length > 80 %}...{% endif %}</small>
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h5 mb-0 text-primary fw-bold">{{ product.price }} €</span>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar3"></i> {{ product.createdAt|date('d/m/Y') }}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('admin_product_edit', {'id': product.id}) }}" class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-pencil"></i> Éditer
+                                </a>
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ product.id }}">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteModal{{ product.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header border-danger">
+                                    <h5 class="modal-title text-danger">
+                                        <i class="bi bi-exclamation-triangle"></i> Confirmer la suppression
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Êtes-vous sûr de vouloir supprimer le produit <strong>{{ product.name }}</strong> ?</p>
+                                    <p class="text-muted"><small>Cette action est irréversible.</small></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <form method="POST" action="{{ path('admin_product_delete', {'id': product.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ product.id) }}">
+                                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.transition-hover {
+    transition: all 0.3s ease;
+}
+
+.transition-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

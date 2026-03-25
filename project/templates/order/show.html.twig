@@ -1,0 +1,86 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Commande #{{ order.id }} - E-Commerce{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Commande #{{ order.id }}</h3>
+                <p><strong>Date:</strong> {{ order.createdAt|date('d/m/Y H:i') }}</p>
+                <p><strong>Statut:</strong> 
+                    {% if order.status == 'pending' %}
+                        <span class="badge bg-warning">En attente</span>
+                    {% elseif order.status == 'completed' %}
+                        <span class="badge bg-success">Complétée</span>
+                    {% elseif order.status == 'cancelled' %}
+                        <span class="badge bg-danger">Annulée</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Détails de la commande</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Prix unitaire</th>
+                            <th>Quantité</th>
+                            <th>Sous-total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.orderItems %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.price }} €</td>
+                                <td>{{ item.quantity }}</td>
+                                <td><strong>{{ (item.price * item.quantity)|number_format(2, '.', ',') }} €</strong></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Récapitulatif</h5>
+                <hr>
+                <p class="d-flex justify-content-between">
+                    <strong>Montant total:</strong>
+                    <span class="text-primary h5">{{ order.totalAmount }} €</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5>Informations client</h5>
+                <p>
+                    <strong>{{ order.user.firstName }} {{ order.user.lastName }}</strong><br>
+                    {{ order.user.email }}<br>
+                    {% if order.user.phone %}
+                        {{ order.user.phone }}<br>
+                    {% endif %}
+                    {% if order.user.address %}
+                        {{ order.user.address }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ path('app_order_list') }}" class="btn btn-outline-secondary">Retour à mes commandes</a>
+</div>
+{% endblock %}

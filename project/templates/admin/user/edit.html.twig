@@ -1,0 +1,150 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Éditer un utilisateur - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 450px;
+        border-radius: 1rem;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .auth-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        color: white;
+        padding: 2rem 1.5rem;
+        border-radius: 1rem 1rem 0 0;
+        text-align: center;
+    }
+
+    .auth-header h2 {
+        margin-bottom: 0;
+        font-weight: 700;
+    }
+
+    .auth-body {
+        padding: 2rem 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-link {
+        text-align: center;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        margin-top: 1.5rem;
+    }
+
+    .auth-link p {
+        margin-bottom: 0;
+        color: #6c757d;
+    }
+
+    .auth-link a {
+        font-weight: 600;
+        color: #0d6efd;
+        text-decoration: none;
+    }
+
+    .auth-link a:hover {
+        text-decoration: underline;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <i class="bi bi-person" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+            <h2>Éditer l'utilisateur</h2>
+            <p class="text-muted" style="margin:0;">{{ user.email }}</p>
+        </div>
+
+        <div class="auth-body">
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+            <div class="form-group">
+                {{ form_label(form.email, 'Adresse Email', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.email, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                {{ form_errors(form.email) }}
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form_label(form.firstName, 'Prénom', {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(form.firstName, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                        {{ form_errors(form.firstName) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form_label(form.lastName, 'Nom', {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(form.lastName, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                        {{ form_errors(form.lastName) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form_row(form.password.first) }}
+            </div>
+            <div class="form-group">
+                {{ form_row(form.password.second) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.phone, 'Téléphone (optionnel)', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.phone, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                {{ form_errors(form.phone) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.address, 'Adresse (optionnel)', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.address, {'attr': {'class': 'form-control form-control-lg'}}) }}
+                {{ form_errors(form.address) }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Rôles</label>
+                <div>
+                    {% for child in form.roles %}
+                        <div class="form-check form-check-inline">
+                            {{ form_widget(child, {'attr': {'class': 'form-check-input'}}) }}
+                            {{ form_label(child, null, {'label_attr': {'class': 'form-check-label ms-1'}}) }}
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ form_errors(form.roles) }}
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-save"></i> Enregistrer
+                </button>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

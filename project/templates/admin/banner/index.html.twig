@@ -1,0 +1,116 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Gestion de la bannière - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h1 class="h2">Gestion de la bannière</h1>
+                <a href="{{ path('admin_product_index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </a>
+            </div>
+
+            {% if banner %}
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body p-0 position-relative" style="height: 300px; overflow: hidden; border-radius: 0.5rem;">
+                                {% if banner.imagePath %}
+                                    {% set imageSrc = banner.imagePath starts with 'http' ? banner.imagePath : asset(banner.imagePath) %}
+                                    <img src="{{ imageSrc }}" alt="Bannière actuelle" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                                        <span style="color: rgba(255,255,255,0.5); font-size: 2rem;">📸</span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if banner.title %}
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: white; padding: 20px;">
+                                        <h3 style="margin-bottom: 5px; font-weight: 700;">{{ banner.title }}</h3>
+                                        {% if banner.description %}
+                                            <p style="margin: 0; font-size: 0.95rem;">{{ banner.description|slice(0, 100) }}{% if banner.description|length > 100 %}...{% endif %}</p>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Informations</h5>
+                                
+                                {% if banner.title %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">Titre</small>
+                                        <div>{{ banner.title }}</div>
+                                    </div>
+                                {% endif %}
+
+                                {% if banner.buttonText %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">Bouton</small>
+                                        <div>{{ banner.buttonText }}</div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <small class="text-muted">Créée</small>
+                                    <div>{{ banner.createdAt|date('d/m/Y H:i') }}</div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a href="{{ path('admin_banner_edit', {id: banner.id}) }}" class="btn btn-primary flex-grow-1">
+                                        <i class="bi bi-pencil"></i> Modifier
+                                    </a>
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucune bannière configurée pour le moment.
+                </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{{ path('admin_banner_new') }}" class="btn btn-success btn-lg">
+                    <i class="bi bi-plus-circle"></i> {% if banner %}Créer une nouvelle bannière{% else %}Créer une bannière{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+{% if banner %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Supprimer la bannière</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Êtes-vous sûr de vouloir supprimer cette bannière ?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="POST" action="{{ path('admin_banner_delete', {id: banner.id}) }}" style="display: inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ banner.id) }}">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

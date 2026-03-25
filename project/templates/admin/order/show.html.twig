@@ -1,0 +1,90 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Commande #{{ order.id }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Commande #{{ order.id }}</h1>
+        <a href="{{ path('admin_order_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour aux commandes
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header">
+                    Informations client
+                </div>
+                <div class="card-body">
+                    <p><strong>Nom :</strong> {{ order.user.firstName }} {{ order.user.lastName }}</p>
+                    <p><strong>Email :</strong> {{ order.user.email }}</p>
+                    {% if order.user.address %}
+                        <p><strong>Adresse :</strong> {{ order.user.address }}</p>
+                    {% endif %}
+                    {% if order.user.phone %}
+                        <p><strong>Téléphone :</strong> {{ order.user.phone }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header">
+                    Détails commande
+                </div>
+                <div class="card-body">
+                    <p><strong>Date :</strong> {{ order.createdAt|date('d/m/Y H:i') }}</p>
+                    <p><strong>Montant total :</strong> {{ order.totalAmount }} €</p>
+                    <p><strong>Statut :</strong>
+                        {% if order.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">En attente</span>
+                        {% elseif order.status == 'completed' %}
+                            <span class="badge bg-success">Complétée</span>
+                        {% elseif order.status == 'cancelled' %}
+                            <span class="badge bg-danger">Annulée</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ order.status }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header">
+            Articles de la commande
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Prix unitaire</th>
+                            <th>Quantité</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.orderItems %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.price }} €</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ (item.price * item.quantity)|number_format(2, ',', ' ') }} €</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Aucun article</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

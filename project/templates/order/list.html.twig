@@ -1,0 +1,50 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Mes Commandes - E-Commerce{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Mes Commandes</h1>
+
+{% if orders is empty %}
+    <div class="alert alert-info">
+        Vous n'avez pas encore de commandes. <a href="{{ path('app_home') }}">Commencer à acheter</a>
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>{{ order.totalAmount }} €</td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                                <span class="badge bg-warning">En attente</span>
+                            {% elseif order.status == 'completed' %}
+                                <span class="badge bg-success">Complétée</span>
+                            {% elseif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Annulée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ path('app_order_show', {'id': order.id}) }}" class="btn btn-primary btn-sm">Voir</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+<a href="{{ path('app_home') }}" class="btn btn-outline-secondary mt-3">Continuer les achats</a>
+{% endblock %}

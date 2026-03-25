@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: symfony-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: symfony-app
+  template:
+    metadata:
+      labels:
+        app: symfony-app
+    spec:
+      containers:
+        - name: symfony
+          image: symfony-app:latest
+          ports:
+            - containerPort: 8000

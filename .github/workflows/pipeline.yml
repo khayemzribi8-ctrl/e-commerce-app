@@ -29,12 +29,16 @@ jobs:
         run: |
           pip install semgrep
           semgrep scan --config auto
-
+      - name: Create .env for CI
+        run: |
+          echo "APP_ENV=prod" > project/.env
+          echo "APP_SECRET=dummysecret" >> project/.env
+          echo "DATABASE_URL=mysql://user:password@mysql:3306/symfony" >> project/.env      
       # 🔐 Dependencies audit (PHP)
       - name: Composer audit
         run: |
           cd project
-          composer install --no-interaction --no-progress --ignore-platform-req=ext-redis
+          composer install --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-redis
           composer audit || true
 
       # 🐳 Build Docker image

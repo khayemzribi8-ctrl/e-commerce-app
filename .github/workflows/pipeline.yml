@@ -34,7 +34,7 @@ jobs:
       - name: Composer audit
         run: |
           cd project
-          composer install --no-interaction --no-progress
+          composer install --no-interaction --no-progress --ignore-platform-req=ext-redis
           composer audit || true
 
       # 🐳 Build Docker image

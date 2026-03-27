@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: symfony
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: symfony
+  template:
+    metadata:
+      labels:
+        app: symfony
+    spec:
+      containers:
+        - name: symfony
+          image: symfony-app:latest
+          imagePullPolicy: Never   # 🔥 TRÈS IMPORTANT
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: "mysql://user:password@mysql:3306/symfony"

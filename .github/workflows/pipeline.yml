@@ -1,0 +1,36 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  devsecops:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Gitleaks (secrets)
+        uses: gitleaks/gitleaks-action@v2
+
+      - name: Run Semgrep (SAST)
+        run: |
+          pip install semgrep
+          semgrep scan --config auto
+
+      - name: Composer audit (dependencies)
+        run: |
+          cd project
+          composer audit || true
+
+      - name: Build Docker image
+        run: docker build -t symfony-app ./project
+
+      - name: Scan image with Trivy
+        run: |
+          docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy image symfony-app

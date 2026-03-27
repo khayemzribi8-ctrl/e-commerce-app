@@ -3,8 +3,8 @@ FROM php:8.2-cli
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql
+    git unzip libpq-dev default-mysql-client \
+    && docker-php-ext-install pdo pdo_mysql
 
 COPY . .
 

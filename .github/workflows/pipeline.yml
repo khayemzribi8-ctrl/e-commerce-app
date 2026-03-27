@@ -12,7 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        with: 
+          args: detect --source=. --no-git
       # 🔐 Secrets scanning
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2

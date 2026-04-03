@@ -10,34 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 📥 Checkout code
+      # 📥 Checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔐 Secrets scanning (FIXED)
+      # 🔐 Gitleaks (secrets)
       - name: Run Gitleaks
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/repo \
-            zricethezav/gitleaks:latest detect \
-            --source=/repo \
-            --no-git \
-            --redact
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: detect --source=. --no-git --redact
 
-      # 🔐 SAST (code analysis)
+      # 🔐 SAST (Semgrep)
       - name: Run Semgrep
         run: |
           pip install semgrep
           semgrep scan --config auto
-      - name: Create .env for CI
-        run: |
-          echo "APP_ENV=prod" > project/.env
-          echo "APP_SECRET=dummysecret" >> project/.env
-          echo "DATABASE_URL=mysql://user:password@mysql:3306/symfony" >> project/.env      
-      # 🔐 Dependencies audit (PHP)
+
+      # 🔐 Dependencies (Symfony fix)
       - name: Composer audit
         run: |
           cd project
+          echo "APP_ENV=prod" > .env
+          echo "APP_SECRET=dummy" >> .env
           composer install --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-redis
           composer audit || true
 
@@ -45,10 +39,25 @@ jobs:
       - name: Build Docker image
         run: docker build -t symfony-app:latest ./project
 
-      # 🔐 Scan Docker image (Trivy)
+      # 🔐 Trivy scan
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: symfony-app:latest
           severity: HIGH,CRITICAL
           exit-code: 0
+
+      # 🚨 OWASP ZAP (DAST)
+      - name: Run OWASP ZAP scan
+        run: |
+          docker run --rm -t \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t ${{ secrets.NGROK_URL }} \
+            -r zap-report.html || true
+
+      # 📦 Upload ZAP report
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap-report.html

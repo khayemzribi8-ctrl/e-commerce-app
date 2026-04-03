@@ -17,8 +17,7 @@ jobs:
       # 🔐 Gitleaks (secrets)
       - name: Run Gitleaks
         uses: zricethezav/gitleaks-action@v2
-        with:
-          args: detect --source=. --no-git --redact
+        
 
       # 🔐 SAST (Semgrep)
       - name: Run Semgrep
@@ -46,8 +45,8 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
-            -Dsonar.projectKey=khayemzribi8-ctrl_e-commerce-app
-            -Dsonar.organization=khayemzribi8-ctrl
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
             -Dsonar.sources=project
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

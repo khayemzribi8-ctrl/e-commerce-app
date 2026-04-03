@@ -21,13 +21,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 🔥 IMPORTANT
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
-          languages: ${{ matrix.language }}
+          languages: php
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      # 🔥 on force le build dans project
+      - name: Install dependencies
+        run: |
+          cd project
+          composer install --no-interaction --no-progress --no-scripts
 
-      - name: Analyze
-        uses: github/codeql-action/analyze@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4

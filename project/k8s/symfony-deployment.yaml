@@ -15,9 +15,14 @@ spec:
       containers:
         - name: symfony
           image: symfony-app:latest
-          imagePullPolicy: Never   # 🔥 TRÈS IMPORTANT
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           env:
             - name: DATABASE_URL
               value: "mysql://user:password@mysql:3306/symfony"
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false

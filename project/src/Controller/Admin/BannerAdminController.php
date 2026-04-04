@@ -8,7 +8,6 @@ use App\Repository\BannerImageRepository;
 use App\Service\FileUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -40,7 +39,7 @@ class BannerAdminController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imagePath')->getData();
-            
+
             if ($imageFile) {
                 $filename = $fileUploadService->upload($imageFile);
                 $banner->setImagePath('uploads/products/' . $filename);
@@ -70,13 +69,13 @@ class BannerAdminController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imagePath')->getData();
-            
+
             if ($imageFile) {
-                // Delete old image if exists
-                if ($banner->getImagePath() && file_exists('public/' . $banner->getImagePath())) {
-                    unlink('public/' . $banner->getImagePath());
+                // 🔒 Suppression sécurisée
+                if ($banner->getImagePath()) {
+                    $this->safeDeleteFile($banner->getImagePath());
                 }
-                
+
                 $filename = $fileUploadService->upload($imageFile);
                 $banner->setImagePath('uploads/products/' . $filename);
             }
@@ -101,8 +100,9 @@ class BannerAdminController extends AbstractController
         Request $request
     ): Response {
         if ($this->isCsrfTokenValid('delete' . $banner->getId(), $request->request->get('_token'))) {
-            if ($banner->getImagePath() && file_exists('public/' . $banner->getImagePath())) {
-                unlink('public/' . $banner->getImagePath());
+
+            if ($banner->getImagePath()) {
+                $this->safeDeleteFile($banner->getImagePath());
             }
 
             $em->remove($banner);
@@ -112,5 +112,28 @@ class BannerAdminController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_banner_index');
+    }
+
+    /**
+     * 🔒 Suppression sécurisée
+     */
+    private function safeDeleteFile(string $relativePath): void
+    {
+        $baseDir = realpath('public/uploads/products');
+
+        if (!$baseDir) {
+            return;
+        }
+
+        $filename = basename($relativePath);
+        $filePath = realpath($baseDir . '/' . $filename);
+
+        if (
+            $filePath !== false &&
+            str_starts_with($filePath, $baseDir) &&
+            file_exists($filePath)
+        ) {
+            unlink($filePath);
+        }
     }
 }

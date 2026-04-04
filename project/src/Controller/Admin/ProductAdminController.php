@@ -68,11 +68,13 @@ class ProductAdminController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('image')->getData();
+
             if ($imageFile) {
-                // Supprimer l'ancienne image si elle existe
-                if ($product->getImage() && file_exists('public/' . $product->getImage())) {
-                    unlink('public/' . $product->getImage());
+                // 🔒 Suppression sécurisée de l'ancienne image
+                if ($product->getImage()) {
+                    $this->safeDeleteFile($product->getImage());
                 }
+
                 $filename = $fileUploadService->upload($imageFile);
                 $product->setImage('uploads/products/' . $filename);
             }
@@ -97,15 +99,41 @@ class ProductAdminController extends AbstractController
         Request $request
     ): Response {
         if ($this->isCsrfTokenValid('delete' . $product->getId(), $request->request->get('_token'))) {
-            // Supprimer le fichier image
-            if ($product->getImage() && file_exists('public/' . $product->getImage())) {
-                unlink('public/' . $product->getImage());
+
+            // 🔒 Suppression sécurisée
+            if ($product->getImage()) {
+                $this->safeDeleteFile($product->getImage());
             }
+
             $em->remove($product);
             $em->flush();
+
             $this->addFlash('success', 'Produit supprimé avec succès!');
         }
 
         return $this->redirectToRoute('admin_product_index');
+    }
+
+    /**
+     * 🔒 Suppression sécurisée d’un fichier
+     */
+    private function safeDeleteFile(string $relativePath): void
+    {
+        $baseDir = realpath('public/uploads/products');
+
+        if (!$baseDir) {
+            return;
+        }
+
+        $filename = basename($relativePath);
+        $filePath = realpath($baseDir . '/' . $filename);
+
+        if (
+            $filePath !== false &&
+            str_starts_with($filePath, $baseDir) &&
+            file_exists($filePath)
+        ) {
+            unlink($filePath);
+        }
     }
 }

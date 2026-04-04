@@ -2,20 +2,27 @@ FROM php:8.2-cli-alpine
 
 WORKDIR /app
 
+# copier app
 COPY . .
 
+# installer composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN apk update && apk upgrade
+# dépendances système
+RUN apk add --no-cache bash icu-dev libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql intl zip
 
-# 🔥 AJOUT IMPORTANT
-RUN docker-php-ext-install pdo pdo_mysql
-
+# installer dépendances PHP
 RUN composer install --no-scripts --no-interaction --no-progress
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# 🔥 créer user NON ROOT avec UID fixe
+RUN addgroup -g 1000 appgroup && \
+    adduser -D -u 1000 -G appgroup appuser
+
+# permissions
 RUN chown -R appuser:appgroup /app
 
-USER appuser
+# switch user
+USER 1000
 
 CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]

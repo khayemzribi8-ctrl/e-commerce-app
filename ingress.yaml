@@ -25,6 +25,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: symfony-app # Nom de votre service.yaml actuel
+                name: symfony-service
                 port:
-                  number: 8000
+                  number: 80

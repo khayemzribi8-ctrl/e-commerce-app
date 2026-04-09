@@ -89,7 +89,10 @@ jobs:
         
       - name: Deploy application and WAF Ingress
         run: |
-          # Plus besoin de kubeconfig ni de secrets SSH, on joue directement à domicile sur le Master !
+          # Injection du nom du repository GitHub dans le manifeste de déploiement
+          sed -i "s|\${GITHUB_REPOSITORY}|$GITHUB_REPOSITORY|g" deployment.yaml
+          
+          # Déploiement K8s
           kubectl apply -f postgres-pvc.yaml
           kubectl apply -f postgres-deployment.yaml
           kubectl apply -f postgres-service.yaml

@@ -9,8 +9,8 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # dépendances système
-RUN apk add --no-cache bash icu-dev libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql intl zip
+RUN apk add --no-cache bash icu-dev libzip-dev postgresql-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql intl zip
 
 # installer dépendances PHP
 RUN composer install --no-scripts --no-interaction --no-progress

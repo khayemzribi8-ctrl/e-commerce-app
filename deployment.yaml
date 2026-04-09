@@ -21,3 +21,7 @@ spec:
           env:
             - name: DATABASE_URL
               value: "postgresql://user:password@postgres:5432/symfony?serverVersion=15&charset=utf8"
+            - name: APP_ENV
+              value: "dev"
+            - name: APP_DEBUG
+              value: "1"

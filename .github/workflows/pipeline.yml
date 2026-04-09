@@ -83,11 +83,12 @@ jobs:
       - name: Setup SSH Tunnel to private Kubernetes cluster
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.BASTION_SSH_KEY }}" > ~/.ssh/id_rsa
+          cat << 'EOF' > ~/.ssh/id_rsa
+          ${{ secrets.BASTION_SSH_KEY }}
+          EOF
           chmod 400 ~/.ssh/id_rsa
-          ssh-keyscan -H 13.220.92.97 >> ~/.ssh/known_hosts
           # Tunnel du trafic local 6443 vers le Maître (10.0.11.240:6443) au travers du Bastion
-          ssh -i ~/.ssh/id_rsa -L 6443:10.0.11.240:6443 ubuntu@13.220.92.97 -N -f
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -L 6443:10.0.11.240:6443 ubuntu@13.220.92.97 -N -f
 
       - name: Setup Kubernetes context
         uses: azure/k8s-set-context@v3

@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: symfony-waf-ingress
+  annotations:
+    # Utilisation de NGINX comme contrôleur Ingress (lien avec le Load Balancer d'AWS)
+    kubernetes.io/ingress.class: nginx
+    
+    # 🛡️ Activation de ModSecurity (Pare-feu applicatif web - WAF)
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    
+    # 🔴 Injection des règles simples OWASP pour bloquer spécifiquement le XSS et les injections SQL (et on capture dans le fichier /var/log/modsec_audit.log)
+    nginx.ingress.kubernetes.io/modsecurity-snippet: |
+      SecRuleEngine On
+      SecAuditEngine RelevantOnly
+      SecAuditLogParts ABIJDEFHZ
+      SecAuditLog /var/log/modsec_audit.log
+      Include /etc/nginx/owasp-modsecurity-crs/crs-setup.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
+      Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
+
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: symfony-app # Nom de votre service.yaml actuel
+                port:
+                  number: 8000

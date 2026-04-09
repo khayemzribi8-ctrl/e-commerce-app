@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - name: symfony
-          image: symfony-app:latest
+          image: ghcr.io/${GITHUB_REPOSITORY}/symfony-app:latest # Cette variable sera substituée par Github
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000

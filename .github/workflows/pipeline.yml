@@ -9,34 +9,26 @@ permissions:
   contents: read
   packages: write
 
-
 jobs:
-  devsecops:
+  build-and-scan:
     runs-on: ubuntu-latest
-
     steps:
-      # 📥 Checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔐 Gitleaks (secrets)
       - name: Run Gitleaks
         uses: zricethezav/gitleaks-action@v2
         
-
-      # 🔐 SAST (Semgrep)
       - name: Run Semgrep
         run: |
           pip install semgrep
           semgrep scan --config auto
 
-      # 🐘 Setup PHP (obligatoire pour Symfony)
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
 
-      # 🔐 Dependencies audit (Symfony fix)
       - name: Composer install + audit
         run: |
           cd project
@@ -45,7 +37,6 @@ jobs:
           composer install --no-interaction --no-progress --no-scripts --ignore-platform-req=ext-redis
           composer audit || true
 
-      # 🔥 SonarCloud (qualité + sécurité)
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:
@@ -56,11 +47,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # 🐳 Build Docker image
       - name: Build Docker image
         run: docker build -t ghcr.io/${{ github.repository }}/symfony-app:latest ./project
 
-      # 🔐 Trivy scan
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
@@ -68,7 +57,6 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 0
 
-      # 🚀 Push image to GitHub Container Registry (GHCR)
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -79,37 +67,6 @@ jobs:
       - name: Push image to GHCR
         run: docker push ghcr.io/${{ github.repository }}/symfony-app:latest
 
-      # ☸️ Deploy to Kubernetes AWS (CD Phase)
-      - name: Setup SSH Tunnel to private Kubernetes cluster
-        run: |
-          mkdir -p ~/.ssh
-          cat << 'EOF' > ~/.ssh/id_rsa
-          ${{ secrets.BASTION_SSH_KEY }}
-          EOF
-          chmod 400 ~/.ssh/id_rsa
-          # Tunnel du trafic local 6443 vers le Maître (10.0.11.240:6443) au travers du Bastion
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -L 6443:10.0.11.240:6443 ubuntu@13.220.92.97 -N -f
-
-      - name: Setup Kubernetes context
-        uses: azure/k8s-set-context@v3
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBECONFIG }}
-
-      - name: Deploy application and WAF Ingress
-        run: |
-          # On remplace l'IP Kubeconfig par le tunnel local
-          sed -i 's/10.0.11.240/127.0.0.1/g' $KUBECONFIG
-          
-          kubectl apply -f postgres-pvc.yaml
-          kubectl apply -f postgres-deployment.yaml
-          kubectl apply -f postgres-service.yaml
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
-          kubectl apply -f ingress.yaml
-          kubectl rollout restart deployment/symfony-app
-
-      # 🚨 OWASP ZAP (DAST) contre le nouvel environnement
       - name: Run OWASP ZAP scan
         run: |
           docker run --rm -t \
@@ -117,9 +74,26 @@ jobs:
             -t ${{ secrets.NGROK_URL }} \
             -r zap-report.html || true
 
-      # 📦 Upload ZAP report
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: zap-report.html
+
+  deploy:
+    needs: build-and-scan
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy application and WAF Ingress
+        run: |
+          # Plus besoin de kubeconfig ni de secrets SSH, on joue directement à domicile sur le Master !
+          kubectl apply -f postgres-pvc.yaml
+          kubectl apply -f postgres-deployment.yaml
+          kubectl apply -f postgres-service.yaml
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
+          kubectl apply -f ingress.yaml
+          kubectl rollout restart deployment/symfony-app

@@ -25,3 +25,5 @@ spec:
               value: "dev"
             - name: APP_DEBUG
               value: "1"
+            - name: DEFAULT_URI
+              value: "http://localhost/"

@@ -24,6 +24,4 @@ spec:
               value: user
             - name: POSTGRES_PASSWORD
               value: password
-          securityContext:
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
+

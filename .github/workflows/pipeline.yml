@@ -80,6 +80,15 @@ jobs:
         run: docker push ghcr.io/${{ github.repository }}/symfony-app:latest
 
       # ☸️ Deploy to Kubernetes AWS (CD Phase)
+      - name: Setup SSH Tunnel to private Kubernetes cluster
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BASTION_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
+          ssh-keyscan -H 13.220.92.97 >> ~/.ssh/known_hosts
+          # Tunnel du trafic local 6443 vers le Maître (10.0.11.240:6443) au travers du Bastion
+          ssh -i ~/.ssh/id_rsa -L 6443:10.0.11.240:6443 ubuntu@13.220.92.97 -N -f
+
       - name: Setup Kubernetes context
         uses: azure/k8s-set-context@v3
         with:
@@ -88,6 +97,9 @@ jobs:
 
       - name: Deploy application and WAF Ingress
         run: |
+          # On remplace l'IP Kubeconfig par le tunnel local
+          sed -i 's/10.0.11.240/127.0.0.1/g' $KUBECONFIG
+          
           kubectl apply -f postgres-pvc.yaml
           kubectl apply -f postgres-deployment.yaml
           kubectl apply -f postgres-service.yaml

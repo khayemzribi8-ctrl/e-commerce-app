@@ -100,3 +100,8 @@ jobs:
           kubectl apply -f service.yaml
           kubectl apply -f ingress.yaml
           kubectl rollout restart deployment/symfony-app
+          
+          # Attente que le pod redémarre et exécution de la création des tables de la BDD !
+          kubectl rollout status deployment/symfony-app
+          kubectl exec deploy/symfony-app -- php bin/console doctrine:database:create --if-not-exists || true
+          kubectl exec deploy/symfony-app -- php bin/console doctrine:schema:update --force

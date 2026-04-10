@@ -92,6 +92,9 @@ jobs:
           # Injection du nom du repository GitHub dans le manifeste de déploiement
           sed -i "s|\${GITHUB_REPOSITORY}|$GITHUB_REPOSITORY|g" deployment.yaml
           
+          # Autoriser les snippets ModSecurity pour le WAF
+          kubectl patch configmap ingress-nginx-controller -n ingress-nginx -p '{"data": {"allow-snippet-annotations": "true"}}' || true
+          
           # Déploiement K8s
           kubectl apply -f postgres-pvc.yaml
           kubectl apply -f postgres-deployment.yaml
@@ -101,7 +104,10 @@ jobs:
           kubectl apply -f ingress.yaml
           kubectl rollout restart deployment/symfony-app
           
-          # Attente que le pod redémarre et exécution de la création des tables de la BDD !
+          # Attente que le pod redémarre
           kubectl rollout status deployment/symfony-app
+          
+          # Attendre que Postgres soit joignable avant de lancer la création des tables
+          sleep 15
           kubectl exec deploy/symfony-app -- php bin/console doctrine:database:create --if-not-exists || true
           kubectl exec deploy/symfony-app -- php bin/console doctrine:schema:update --force
